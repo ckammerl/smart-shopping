@@ -115,7 +115,7 @@ var App = Eventful.createClass({
     });
   },
 
-  removeSuggestion: function(data) {
+removeSuggestion: function(data) {
     $.post(url.removeSuggestion, data)
     .done(function() {
       this.getSuggestions();
