@@ -16,6 +16,10 @@ var App = Eventful.createClass({
 
   getInitialState: function() {
     return {
+      suggestions: [
+        { name: 'milk' },
+        { name: 'fish' }
+      ],
       items: [],
       mode: ModeToggle.EDITING
     };
@@ -101,6 +105,16 @@ var App = Eventful.createClass({
     this.setState({ mode: data.mode });
   },
 
+  removeSuggestion: function(data) {
+    $.post(url.removeSuggestion, data)
+    .done(function(data) {
+      this.setState({ suggestions: data })
+    })
+    .fail(function(xhr, status, err) {
+      console.error('Error removing suggestion:', status, err);
+    });
+  },
+
   componentDidMount: function() {
     // eventful event listeners
     this.on('register', function(data) {
@@ -108,23 +122,30 @@ var App = Eventful.createClass({
     });
     this.on('login', function(data) {
       this.loginUser(data);
-    });
+    }.bind(this));
+
     this.on('update-item', function(data) {
       this.updateItem(data)
     });
     this.on('add-item', function(data) {
       this.addItem(data);
     });
+
     this.on('remove-item', function(data) {
       if (this.state.mode === ModeToggle.SHOPPING) {
         this.archiveItem(data);
       } else {
         this.deleteItem(data);
       }
-    });
+    }.bind(this));
+
     this.on('change-mode', function(data) {
       this.changeMode(data);
     });
+
+    this.on('remove-suggestion', function(data) {
+      this.removeSuggestion(data);
+    }.bind(this));
 
     this.getList();
   },
