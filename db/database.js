@@ -19,3 +19,7 @@ module.exports = {
     past_items: [{item_id: String, purchase_dates: []}]
   })
 };
+
+
+//create suggstions Schema
+// col suggestion list : item_id

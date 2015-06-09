@@ -3,12 +3,12 @@ var mongoose = require('mongoose');
 var models = require('../../db/database.js');
 var Item = mongoose.model('Item', models.item);
 var User = mongoose.model('User', models.user);
-var Suggestion = mongoose.mode('Suggestion', models.suggestion);
+// var Suggestion = mongoose.model('Suggestion', models.suggestion);
 
 var findUser = Q.nbind(User.findOne,User);
 
 var calculateSuggestions = function(uid) {
-  return findUser({usename: uid})
+  return findUser({username: uid})
   .then(function(user) {
     return user.past_items.reduce(function(item, past_items) {
       var iid = item.item_id;
