@@ -1,8 +1,7 @@
 var Q = require('q');
 var mongoose = require('mongoose');
-var models = require('../../db/database.js');
-var Item = mongoose.model('Item', models.item);
-var User = mongoose.model('User', models.user);
+var Item = require('../../db/database.js').Item;
+var User = require('../../db/database.js').User;
 
 var orderList = function(list) {
   list.sort(function(a, b) {

@@ -2,9 +2,8 @@ var Q = require('q');
 var request = require('request');
 var config = require('./config.js');
 var mongoose = require('mongoose');
-var models = require('../../db/database.js');
-var Item = mongoose.model('Item', models.item);
 var cheerio = require('cheerio');
+var Item = require('../../db/database.js').Item;
 
 
 var mode = function(array) {
@@ -37,8 +36,10 @@ module.exports = {
     location = location.slice(-2) + location.slice(0, location.length - 4);
     var salesObject = {};
 
-    var findItem = Q.nbind(Item.findOne, Item);
-    var createItem = Q.nbind(Item.create, Item);
+    // creates a promise returning function:
+     // in schema Item, find an instance (document), called in line 41
+    var findItem = Q.nbind(Item.findOne, Item); //findOne is a mongoose method
+    var createItem = Q.nbind(Item.create, Item); //createItem is a mongoose method
 
     findItem({name: name})
     .then(function(match) {
@@ -136,9 +137,6 @@ module.exports = {
             }
           })
 
-        });
-      }
-    })
     .catch(function(err) {
       console.error(err);
       res.status(500).send({error: 'Server Error'});

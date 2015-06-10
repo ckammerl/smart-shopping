@@ -19,9 +19,14 @@ module.exports = {
     }
   }),
 
-  user : new Schema({
-    username: String,
-    list: [{ type: Schema.Types.ObjectId, ref: 'Item'}],
-    past_items: [{ type: Schema.Types.ObjectId, ref: 'Item'}]
-  })
+var User = new Schema({
+  username: String,
+  list: [{ type: Schema.Types.ObjectId, ref: 'Item'}],
+  past_items: [{ type: Schema.Types.ObjectId, ref: 'Item'}]
+});
+
+
+module.exports = {
+  Item: mongoose.model('Item', Item),
+  User: mongoose.model('User', User)
 };
