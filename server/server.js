@@ -33,6 +33,8 @@ app.use('/api/*', firebaseAuth.validateUserToken);
 
 app.get('/api/list', listController.getList);
 
+app.get('/api/list/suggestions', listController.getSuggestionList);
+
 app.use('/api/item/add', itemController.createNewItem);
 app.post('/api/item/add', listController.addItemToList);
 

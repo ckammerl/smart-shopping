@@ -30,7 +30,7 @@ var ListItem = Eventful.createClass({
     this.setState({editable: false});
   },
   removeItem: function() {
-    this.emit('remove-item', { index: this.props.index });
+    this.emit('remove-item', { index: this.props.index, name: this.props.name });
   },
   render: function() {
     var cssClasses = {

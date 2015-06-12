@@ -34,6 +34,43 @@ var storeOrderedList = function(username, list, cb) {
       });
 };
 
+var getSuggestionDate = function(datesList) { //  [dateA, dateB, dateC]
+  // console.log('datesList', datesList);
+  var listElapsedDays = [];
+  var suggestion = [];
+  //iterate over date array
+  for (var i = 0; i < datesList.length-1; i++){
+  // substract dateB - dateA, dateC - dateB etc
+    var start = datesList[i];
+    var stop = datesList[i+1];
+    var elapsedTime = stop.getTime() - start.getTime();
+    // console.log('elapsedTime', elapsedTime);
+    var elapsedDays = Math.floor(elapsedTime / 86400000);
+    // console.log('elapsedDays', elapsedDays);
+    listElapsedDays.push(elapsedDays);
+  }
+
+  if (listElapsedDays.length === 0) {
+    return suggestion;
+  }
+
+  var sortedList = listElapsedDays.sort();
+  console.log(sortedList);
+  var median = sortedList[Math.floor(sortedList.length / 2)];
+
+  // console.log('median', median);
+
+  if (median >= 0) {
+    var lastArchiveDay = datesList[datesList.length-1];
+    var suggestionDate = new Date();
+    suggestionDate.setDate(lastArchiveDay.getDate() + median);
+
+    // console.log('suggestionDate', suggestionDate);
+    suggestion.push(suggestionDate, elapsedDays);
+  }
+
+  return suggestion;
+};
 
 module.exports = {
   createUser: function(uid) {
@@ -62,10 +99,16 @@ module.exports = {
     User
     .findOne({username: username})
     .populate('list')
+    .populate('past_items')
+    // .populate({
+    //   path: 'past_items',
+    //   select: '_id archived_timestamp'
+    // })
     .exec(function(err, user) {
       console.log(user);
       if (err) console.error(err);
       console.log('in get list, user:',user);
+
       res.send(user.list);
     });
   },
@@ -96,17 +139,30 @@ module.exports = {
   addItemToArchive: function(req, res) {
     var username = req.uid;
     var index = Number(req.body.index);
-    var tempId;
+    var itemName = req.body.name;
+    // console.log('body with name', req.body);
 
     User.findOne({username: username}, function(err, user) {
-      var pushModifier = {$push: {}};
-      pushModifier.$push['past_items'] = user.list[index];
-      User.update({username: username}, pushModifier, {upsert: true}, function(err) {if (err) console.error(err)});
+      // var pushModifier = {$push: {}};
+      var itemId = user.list[index];
+      // pushModifier.$push['past_items'] = item_id;
+      var name =
+
+      User.update(
+        {username: username},
+        {$push: {'past_items': {item: itemId, name: itemName, archived: new Date()}}},
+        {safe: true, upsert: true},
+        function(err, user) {
+          if (err) console.error(err)
+        });
     });
 
     var setModifier = { $set: {} };
     setModifier.$set['list.' + index] = null;
-    User.update({username: username}, setModifier, {upsert: true}, function(err) {
+    User.update({username: username},
+      setModifier,
+      {upsert: true},
+      function(err) {
       if (err) {
         console.error(err);
         res.status(500).send({error: 'Server Error'});
@@ -176,5 +232,86 @@ module.exports = {
         }
       });
     });
+  },
+
+  getSuggestionList: function(req, res) {
+    var username = req.uid;
+    var archivedItemWithFrequency = {};
+    var suggestionsList = {};
+
+    User
+      .findOne({username: username})
+      // .populate('list')
+      .populate('past_items')
+      .exec(function(err, user) {
+        if (err) console.error(err);
+        console.log('in getItemsToSuggest list, user:',user);
+      //   res.send(user.past_items);
+      // });
+
+        // get past_items array
+        var archivedItems = user.past_items;
+
+        // only send suggestions when min 20 elems in archive
+        if (archivedItems.length >= 20) {
+          // iterate over archivedItems (limit to last 20 entries) and
+          // extract elems with same id ;
+          for (var i = 0; i < archivedItems.length-1; i++) {
+            for (var j = i+1; j <= archivedItems.length-1; j++) {
+              var currentItemName = archivedItems[i].name;
+
+          // TODO
+              if (!currentItemName) {
+                // console.log('currentItemName or Id is falsy');
+                continue;
+              } else {
+                // console.log('currentItemName or Id is truthy');
+                // console.log('archivedItems[i].item', archivedItems[i].item);
+                // console.log('currentItemId', currentItemId);
+
+                var currentItemId = archivedItems[i].item;
+                var currentItemDate = archivedItems[i].archived;
+                var nextItemName = archivedItems[j].name;
+
+                // console.log('currentItemId', currentItemId);
+                // console.log('nextItemId', nextItemId);
+                // var test = (currentItemName === nextItemName);
+                // console.log('currentItemName', currentItemName);
+                // console.log('nextItemName', nextItemName);
+                // console.log('currentItemName === nextItemName', test );
+
+                // if item is listed more then once
+                if ( currentItemName === nextItemName ) {
+                  // if list hasn't item already as key
+                  if ( !archivedItemWithFrequency.hasOwnProperty(currentItemName) ) {
+                  archivedItemWithFrequency[currentItemName] = [currentItemDate];
+                  }
+                  archivedItemWithFrequency[currentItemName].push(currentItemDate);
+                }
+              } // else
+            } // inner for
+           } // outer for
+
+           // console.log('archivedItemWithFrequency', archivedItemWithFrequency);
+
+           for (var key in archivedItemWithFrequency) {
+            // [date, date, date]
+            var archiveDates = archivedItemWithFrequency[key];
+            // console.log('archiveDates', archiveDates);
+            var currentSuggestion = getSuggestionDate(archiveDates);
+
+            // console.log('currentSuggestion[0]', currentSuggestion[0]);
+
+            if (!suggestionsList[currentSuggestion[0]]) { // [suggestionDate, elapsedDays]
+              suggestionsList[currentSuggestion[0]] = [{item: {id: currentItemId, name: key, elapsedDays: currentSuggestion[0] }}];
+
+            } else {
+              suggestionsList[currentSuggestion[0]].push( {item: {id: currentItemId, name: currentItemName, elapsedDays: currentSuggestion[1]}} );
+            } // else
+           } // for key
+        }
+        res.send(suggestionsList);
+      });
   }
 };
+
