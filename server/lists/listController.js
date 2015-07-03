@@ -236,7 +236,7 @@ module.exports = {
         var archivedItems = user.past_items;
 
         // only send suggestions when min 20 elems in archive
-        if (archivedItems.length >= 20) {
+        // if (archivedItems.length >= 20) {
           // iterate over archivedItems and
           // extract elems with same ObjectId ;
           for (var i = 0; i < archivedItems.length-1; i++) {
@@ -261,6 +261,8 @@ module.exports = {
             }
            }
 
+           console.log('archivedItemWithFrequency', archivedItemWithFrequency);
+
            for (var key in archivedItemWithFrequency) {
             // [date, date, date]
             var archiveDates = archivedItemWithFrequency[key];
@@ -282,7 +284,7 @@ module.exports = {
               }
             }
            }
-        }
+        // }
         res.send(suggestionsList);
       });
   }
