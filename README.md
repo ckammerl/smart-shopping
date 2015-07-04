@@ -18,3 +18,10 @@
 
 ## Solution ##
   > It removes the burden of creating a new list every week before you head to the grocery store and keeps your trip quick and efficient. 
+
+
+## Set up
+
+Add the config variables for firebase. 
+
+Add the following private configs (from google docs)[https://docs.google.com/document/d/1L24xo8kS5MaoXiKEWvfFaiMP80iSozEc-4QStAij_7c/edit]
